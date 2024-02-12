@@ -79,12 +79,16 @@ MAIN to return to main menu
                 socket = context.socket(zmq.REQ)
                 socket.connect('tcp://localhost:4040')
                 socket.send_string(team_name)
+
+                # payload
                 roster_json = socket.recv_json()
+
+                # start formatting output string
                 output_string_roster = "\n             PITCHERS\n\n"
                 output_string_roster += "SELECT          JERSEY          NAME\n"
                 select_number = 1
 
-                # Find all pitchers
+                # Find all pitchers, add to output string
                 for player in roster_json:
 
                     if player['primary_position'] == '1':
@@ -103,7 +107,7 @@ MAIN to return to main menu
                             f"""{select_number}{buffer_1}              {player['jersey_number']}{buffer_2}              {player['name_display_first_last']}\n"""
                         select_number += 1
 
-                # find all non-pitchers
+                # find all non-pitchers, add to output string
                 output_string_roster += "\n\n\n             POSITION PLAYERS\n\n"
                 output_string_roster += "SELECT          JERSEY          NAME\n"
                 for player in roster_json:
@@ -122,8 +126,12 @@ MAIN to return to main menu
                         output_string_roster += \
                             f"""{select_number}{buffer_1}              {player['jersey_number']}{buffer_2}              {player['name_display_first_last']}\n"""
                         select_number += 1
+
                 print(output_string_roster)
-                print(roster_json)
+                #print(roster_json)
+                return_value = Navigation.select_player(roster_json=roster_json)
+                if return_value == "BACK":
+                    return "BACK"
 
             elif user_input in ("2", "VIEW UPCOMING SCHEDULE"):
                 # TODO: get data from website (need new microservice)
@@ -133,6 +141,48 @@ MAIN to return to main menu
                 # TODO: get data from website (need new microservice)
                 print("prev 5 games!")
                 continue
+
+    @staticmethod
+    def select_player(roster_json):
+        while True:
+            print('\nEnter a player\'s SELECT number to see more statistics about that player')
+            print("BACK to go back. MAIN for main.")
+            select_player_number = input().upper()
+            if select_player_number == "BACK":
+                return "BACK"
+            elif select_player_number == "MAIN":
+                return "MAIN"
+            else:
+                select_player_number = int(select_player_number)
+
+            select_number = 1
+
+            # iterate through pitchers
+            for player in roster_json:
+                if player['primary_position'] == '1':
+                    if select_player_number == select_number:
+                        for item in player:
+                            print(f"{item}: {player[item]}")
+                    select_number += 1
+
+            # iterate through position players
+            for player in roster_json:
+                if player['primary_position'] != '1':
+                    if select_player_number == select_number:
+                        for item in player:
+                            print(f"{item}: {player[item]}")
+                    select_number += 1
+
+            #socket = context.socket(zmq.REQ)
+            #socket.connect('tcp://localhost:7843')
+            #socket.send_string(player_id)
+
+            # payload
+            #stats_json = socket.recv_json()
+            #print(stats_json)
+
+
+
 
 
 Navigation.main_menu()

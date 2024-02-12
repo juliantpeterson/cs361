@@ -9,8 +9,17 @@ socket.bind("tcp://*:4040")
 while True:
     # wait for message from client
     team_string = str(socket.recv()).upper()[2:-1]
+
     # format name for searching in list
-    name = team_string.split()[-1].lower().capitalize()
+    # cover edge cases for teams with two-word names:
+    if team_string == 'TORONTO BLUE JAYS':
+        name = "Blue Jays"
+    elif team_string == 'CHICAGO WHITE SOX':
+        name = 'White Sox'
+    elif team_string == 'BOSTON RED SOX':
+        name = 'Red Sox'
+    else:
+        name = team_string.split()[-1].lower().capitalize()
 
     # create url and GET request to search for team number
     host = "http://lookup-service-prod.mlb.com"
@@ -33,10 +42,9 @@ while True:
     #print(response)
     #print(response.content)
 
-    # Print the response
+    # send the response json
     response_json = response.json()
     players = response_json['roster_40']['queryResults']['row']
-    print(players)
     socket.send_json(players)
 
 
